@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+feed.xml
 dist
 dist-ssr
 *.local

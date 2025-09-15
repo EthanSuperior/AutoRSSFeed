@@ -2,7 +2,7 @@ name: Update Feed
 
 on:
   schedule:
-    - cron: "*/30 * * * *" # every 30 minutes
+    - cron: "*/55 * * * *" # every 55 minutes
   workflow_dispatch: # manual run
 
 jobs:

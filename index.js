@@ -1,106 +1,134 @@
 import fs from "fs";
 import Parser from "rss-parser";
-import { load } from "cheerio";
-
-const parser = new Parser();
-
-// --- CONFIG ---
+const mangaAgrArgs = {
+	type: "html",
+	elemSelector: "li.wp-manga-chapter",
+	linkSelector: "a",
+	titleSelector: "a",
+	descSelector: null,
+};
 const SOURCES = [
 	{
-		type: "rss",
-		url: "https://forums.spacebattles.com/threads/serass-dumpster-of-random-snippets.1143040/threadmarks.rss",
+		url: "https://forums.spacebattles.com/threads/snippets.1143040/threadmarks.rss",
 	},
 	{
-		type: "youtube",
+		url: "https://forums.spacebattles.com/threads/pokemon.1028636/threadmarks.rss",
+	},
+	{
+		url: "https://forums.spacebattles.com/threads/battletech.979266/threadmarks.rss",
+	},
+	{
+		url: "https://forums.spacebattles.com/threads/pathfinder.1008433/threadmarks.rss",
+	},
+	{
+		url: "https://forums.spacebattles.com/threads/phantom-star.1183048/threadmarks.rss",
+	},
+	{
 		url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCXoqL7S2DjbrJe5ewfmlDvw",
-		whitelist: ["snapshot", "datapack", "resource", "pre"],
+		whitelist: ["news"],
 	},
 	{
-		type: "html",
+		...mangaAgrArgs,
 		url: "https://kunmanga.com/manga/ill-be-the-matriarch-in-this-life/",
-		linkSelector: "li.wp-manga-chapter a",
-		titleSelector: "li.wp-manga-chapter a",
-		descSelector: null,
 	},
 	{
-		type: "html",
+		...mangaAgrArgs,
 		url: "https://manhwaclan.com/manga/remarried-empress/",
-		linkSelector: "li.wp-manga-chapter a",
-		titleSelector: "li.wp-manga-chapter a",
-		descSelector: null,
 	},
 ];
 
-function toItem({ title, link, description, pubDate }) {
-	return {
-		title,
-		link,
-		description: description || "",
-		pubDate: new Date(pubDate || Date.now()),
-	};
-}
-let items = [];
+const PARSERS = {
+	rss: parseRSS,
+	youtube: parseRSS,
+	html: parseHtml,
+};
 
-for (let source of SOURCES) {
-	try {
-		if (source.type === "rss") {
-			let feed = await parser.parseURL(source.url);
-			items.push(...feed.items.map((i) => toItem(i)));
-		}
-
-		if (source.type === "youtube") {
-			let feed = await parser.parseURL(source.url);
-			let wl = source.whitelist.map((w) => w.toLowerCase());
-			let filtered = feed.items.filter((i) =>
-				wl.some((w) => i.title.toLowerCase().includes(w))
-			);
-			items.push(...filtered.map((i) => toItem(i)));
-		}
-
-		if (source.type === "html") {
-			let html = await fetch(source.url).then((r) => r.text());
-			let $ = load(html);
-			$(source.linkSelector).each((_, el) => {
-				let link = $(el).attr("href");
-				let title = source.titleSelector ? $(el).text().trim() : link;
-				let desc = source.descSelector
-					? $(el).find(source.descSelector).text().trim()
-					: "";
-				items.push(toItem({ title, link, description: desc }));
-			});
-		}
-	} catch (err) {
-		console.error("Error fetching", source.url, err);
+const rssParser = new Parser();
+async function parseRSS(source) {
+	const res = await fetch(source.url, {
+		headers: {
+			"Cache-Control": "no-cache",
+			Pragma: "no-cache",
+			"If-None-Match": "",
+		},
+	});
+	if (!res.ok) {
+		console.error(
+			`Failed to fetch ${source.url} - ${res.status}: ${res.statusText}`
+		);
+		return [];
 	}
+	let items = (await rssParser.parseString(await res.text())).items;
+	if (source.whitelist) {
+		let wl = source.whitelist.map((w) => w.toLowerCase());
+		items = items.filter((i) =>
+			wl.some((w) => i.title.toLowerCase().includes(w))
+		);
+	}
+	if (source.blacklist) {
+		let bl = source.blacklist.map((w) => w.toLowerCase());
+		items = items.filter(
+			(i) => !bl.some((w) => i.title.toLowerCase().includes(w))
+		);
+	}
+	return items;
 }
 
-// sort + trim
-items.sort((a, b) => b.pubDate - a.pubDate);
-items = items.slice(0, 50);
+async function parseHtml(source) {
+	return [];
+}
 
-// Build XML
-const xml = `
-<rss version="2.0">
+function makeXML(items) {
+	function xmlItem(item) {
+		return `
+		<item>
+			<title><![CDATA[${item.title}]]></title>
+			<link>${item.link}</link>
+			${
+				item.description
+					? `<description><![CDATA[${item.description}]]></description>`
+					: ""
+			}
+			<pubDate>${item.pubDate.toUTCString()}</pubDate>
+		</item>\n`;
+	}
+
+	return `<rss version="2.0">
   <channel>
     <title>Aggregated Feed</title>
-    <link>${""}</link>
+    <link>https://github.com/EthanSuperior/AutoRSSFeed</link>
     <description>Combined sources</description>
-    ${items
-			.map(
-				(i) => `
-      <item>
-        <title><![CDATA[${i.title}]]></title>
-        <link>${i.link}</link>
-        ${
-					i.description
-						? `<description><![CDATA[${i.description}]]></description>`
-						: ""
-				}
-        <pubDate>${i.pubDate.toUTCString()}</pubDate>
-      </item>
-    `
-			)
-			.join("")}
-  </channel>
-</rss>`;
-fs.writeFileSync("dist/feed.xml", xml);
+    ${items.map(xmlItem).join("")}
+  </channel>\n</rss>`;
+}
+
+async function updateFeed() {
+	let items = [];
+	for (let source of SOURCES) {
+		try {
+			const parser = PARSERS[source.type?.toLowerCase() ?? "rss"];
+			if (parser) items.push(await parser(source));
+			else console.error(`No parser exists for source type: ${source.type}`);
+		} catch (err) {
+			console.error("Error fetching", source.url, err);
+		}
+	}
+
+	// const oldFeed = rssParser.parseString(fs.readFileSync("feed.xml"));
+
+	items = items.flatMap((items) =>
+		items.map((item) => ({
+			title: item.title,
+			link: item.link,
+			description: item.description || "",
+			pubDate: new Date(item.pubDate || Date.now()),
+		}))
+	);
+
+	// sort + trim
+	items.sort((a, b) => b.pubDate - a.pubDate);
+	// console.log(items);
+	fs.writeFileSync("feed.xml", makeXML(items.slice(0, 50)));
+}
+
+await updateFeed();
