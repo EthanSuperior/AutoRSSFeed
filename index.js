@@ -114,7 +114,7 @@ async function updateFeed() {
 		}
 	}
 
-	// const oldFeed = rssParser.parseString(fs.readFileSync("feed.xml"));
+	// const oldFeed = rssParser.parseString(fs.readFileSync("./dist/feed.xml"));
 
 	items = items.flatMap((items) =>
 		items.map((item) => ({
@@ -128,7 +128,7 @@ async function updateFeed() {
 	// sort + trim
 	items.sort((a, b) => b.pubDate - a.pubDate);
 	// console.log(items);
-	fs.writeFileSync("dist/feed.xml", makeXML(items.slice(0, 50)));
+	fs.writeFileSync("./dist/feed.xml", makeXML(items.slice(0, 50)));
 }
 
 await updateFeed();
