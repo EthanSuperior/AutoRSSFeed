@@ -59,13 +59,13 @@ async function parseRSS(source) {
 		return [];
 	}
 	let items = (await rssParser.parseString(await res.text())).items;
-	if (source.whitelist) {
+	if (items && source.whitelist) {
 		let wl = source.whitelist.map((w) => w.toLowerCase());
 		items = items.filter((i) =>
 			wl.some((w) => i.title.toLowerCase().includes(w))
 		);
 	}
-	if (source.blacklist) {
+	if (items && source.blacklist) {
 		let bl = source.blacklist.map((w) => w.toLowerCase());
 		items = items.filter(
 			(i) => !bl.some((w) => i.title.toLowerCase().includes(w))
@@ -127,7 +127,6 @@ async function updateFeed() {
 
 	// sort + trim
 	items.sort((a, b) => b.pubDate - a.pubDate);
-	// console.log(items);
 	fs.writeFileSync("feed.xml", makeXML(items.slice(0, 50)));
 }
 

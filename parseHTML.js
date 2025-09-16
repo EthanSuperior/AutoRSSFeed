@@ -2,7 +2,6 @@ import { load } from "cheerio";
 async function parseHtml(source) {
 	let html = await fetch(source.url).then((r) => r.text());
 	console.log(!!html ? "Found" : "Did not find", `html for ${source.url}`);
-	console.log(html);
 	let res = load(html);
 	let items = [];
 	res(source.elemSelector).each((_, el) => {
