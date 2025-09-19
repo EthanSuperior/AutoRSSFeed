@@ -5,6 +5,13 @@
     <description>Combined sources</description>
     
 		<item>
+			<title><![CDATA[News in Minecraft 1.21.9 Pre-Release 2 - Nether & End Spawning Fixed]]></title>
+			<link>https://www.youtube.com/watch?v=nPOcXAzS3Uk</link>
+			
+			<pubDate>Fri, 19 Sep 2025 19:52:54 GMT</pubDate>
+		</item>
+
+		<item>
 			<title><![CDATA[News in Data Pack Version 87.1 (1.21.9-pre1)]]></title>
 			<link>https://www.youtube.com/watch?v=N7LPEbhNCtk</link>
 			
@@ -19,7 +26,7 @@
 		</item>
 
 		<item>
-			<title><![CDATA[News in 1.21.9 Pre-Release 1 - End Portal Fall Resets!]]></title>
+			<title><![CDATA[News in Minecraft 1.21.9 Pre-Release 1 - End Portal Fall Resets!]]></title>
 			<link>https://www.youtube.com/watch?v=RjbXy0vek50</link>
 			
 			<pubDate>Tue, 16 Sep 2025 22:39:51 GMT</pubDate>
@@ -128,13 +135,6 @@
 			<link>https://www.youtube.com/watch?v=RX5VC-WTo7A</link>
 			
 			<pubDate>Sun, 24 Aug 2025 16:15:01 GMT</pubDate>
-		</item>
-
-		<item>
-			<title><![CDATA[News in Snapshots 25w34a & 25w34b - Copper Golem Tweaks! Code of Conducts!]]></title>
-			<link>https://www.youtube.com/watch?v=fCga6TTeAA4</link>
-			
-			<pubDate>Tue, 19 Aug 2025 19:39:01 GMT</pubDate>
 		</item>
 
   </channel>
