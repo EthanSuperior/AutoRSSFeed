@@ -24,6 +24,9 @@ const SOURCES = [
 		url: "https://forums.spacebattles.com/threads/phantom-star.1183048/threadmarks.rss",
 	},
 	{
+		url: "https://forums.spacebattles.com/threads/dawn-si.1023131/threadmarks.rss",
+	},
+	{
 		url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCXoqL7S2DjbrJe5ewfmlDvw",
 		whitelist: ["news"],
 	},
